@@ -31,16 +31,18 @@ using namespace served::net;
 server::server( const std::string & address
               , const std::string & port
               , multiplexer       & mux
+							, const std::string & chain_filename
+							, const std::string & private_key_filename
               )
 	: _io_service()
 	, _signals(_io_service)
 	, _acceptor(_io_service)
 	, _connection_manager()
-	, _socket(_io_service)
 	, _request_handler(mux)
 	, _read_timeout(0)
 	, _write_timeout(0)
 	, _req_max_bytes(0)
+  , _context(_io_service, boost::asio::ssl::context::sslv23)
 {
 	/*
 	 * Register to handle the signals that indicate when the server should exit.
@@ -52,6 +54,9 @@ server::server( const std::string & address
 #if defined(SIGQUIT)
 	_signals.add(SIGQUIT);
 #endif // defined(SIGQUIT)
+
+	_context.use_certificate_chain_file(chain_filename);
+	_context.use_private_key_file(private_key_filename, boost::asio::ssl::context::pem);
 
 	do_await_stop();
 
@@ -129,8 +134,9 @@ server::stop()
 void
 server::do_accept()
 {
-	_acceptor.async_accept(_socket,
-		[this](boost::system::error_code ec) {
+	std::shared_ptr<ssl_socket> socket = std::make_shared< ssl_socket >( _io_service, _context );
+	_acceptor.async_accept(socket->lowest_layer(),
+		[this,socket](boost::system::error_code ec) {
 			// Check whether the server was stopped by a signal before this
 			// completion handler had a chance to run.
 			if (!_acceptor.is_open())
@@ -141,7 +147,7 @@ server::do_accept()
 			{
 				_connection_manager.start(
 					std::make_shared<connection>( _io_service
-					                            , std::move(_socket)
+					                            , socket
 					                            , _connection_manager
 					                            , _request_handler
 					                            , _read_timeout

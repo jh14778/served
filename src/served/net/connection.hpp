@@ -24,6 +24,7 @@
 #define SERVED_CONNECTION_HPP
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <served/multiplexer.hpp>
 #include <served/response.hpp>
@@ -32,6 +33,8 @@
 
 #include <array>
 #include <memory>
+
+typedef boost::asio::ssl::stream<	boost::asio::ip::tcp::socket > ssl_socket;
 
 namespace served { namespace net {
 
@@ -51,7 +54,7 @@ public:
 private:
 	boost::asio::io_service &    _io_service;
 	status_type                  _status;
-	boost::asio::ip::tcp::socket _socket;
+	std::shared_ptr<ssl_socket>  _socket;
 	connection_manager &         _connection_manager;
 	multiplexer        &         _request_handler;
 	std::array<char, 8192>       _buffer;
@@ -80,12 +83,12 @@ public:
 	 * @param write_timer the timeout for writing, 0 is ignored
 	 */
 	explicit connection( boost::asio::io_service &    io_service
-	                   , boost::asio::ip::tcp::socket socket
+	                   , std::shared_ptr<ssl_socket>  socket
 	                   , connection_manager &         manager
 	                   , multiplexer        &         handler
 	                   , size_t                       max_request_size_bytes
 	                   , int                          read_timeout
-	                   , int                          write_timeout );
+	                   , int                          write_timeout);
 
 	/*
 	 * Prompts the connection to start reading from its TCP socket.

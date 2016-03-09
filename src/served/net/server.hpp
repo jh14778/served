@@ -24,9 +24,12 @@
 #define SERVER_HPP
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <string>
 #include <served/net/connection_manager.hpp>
 #include <served/multiplexer.hpp>
+
+typedef boost::asio::ssl::stream<	boost::asio::ip::tcp::socket > ssl_socket;
 
 namespace served { namespace net {
 
@@ -44,7 +47,7 @@ class server
 	boost::asio::signal_set        _signals;
 	boost::asio::ip::tcp::acceptor _acceptor;
 	connection_manager             _connection_manager;
-	boost::asio::ip::tcp::socket   _socket;
+	boost::asio::ssl::context      _context;
 	multiplexer &                  _request_handler;
 	int                            _read_timeout;
 	int                            _write_timeout;
@@ -66,7 +69,9 @@ public:
 	 */
 	explicit server( const std::string & address
 	               , const std::string & port
-	               , multiplexer       & mux     );
+	               , multiplexer       & mux
+			           , const std::string & chain_filename
+			           , const std::string & private_key_filename );
 
 	/*
 	 * A call that prompts the server into listening for HTTP requests.

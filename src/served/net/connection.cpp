@@ -31,7 +31,7 @@
 using namespace served::net;
 
 connection::connection( boost::asio::io_service &    io_service
-                      , boost::asio::ip::tcp::socket socket
+                      , std::shared_ptr<ssl_socket>  socket
                       , connection_manager &         manager
                       , multiplexer        &         handler
                       , size_t                       max_req_size_bytes
@@ -40,7 +40,7 @@ connection::connection( boost::asio::io_service &    io_service
                       )
 	: _io_service(io_service)
 	, _status(status_type::READING)
-	, _socket(std::move(socket))
+	, _socket(socket)
 	, _connection_manager(manager)
 	, _request_handler(handler)
 	, _request()
@@ -54,8 +54,13 @@ connection::connection( boost::asio::io_service &    io_service
 void
 connection::start()
 {
-	_request.set_source(_socket.remote_endpoint().address().to_string());
-	do_read();
+	auto self(shared_from_this());
+
+	_request.set_source(_socket->lowest_layer().remote_endpoint().address().to_string());
+	_socket->async_handshake(boost::asio::ssl::stream_base::server, [this,self](const boost::system::error_code& error)
+	{
+		do_read();
+	});
 
 	if ( _read_timeout > 0 )
 	{
@@ -73,7 +78,7 @@ connection::start()
 void
 connection::stop()
 {
-	_socket.close();
+	_socket->lowest_layer().close();
 }
 
 void
@@ -81,7 +86,7 @@ connection::do_read()
 {
 	auto self(shared_from_this());
 
-	_socket.async_read_some(boost::asio::buffer(_buffer.data(), _buffer.size()),
+	_socket->async_read_some(boost::asio::buffer(_buffer.data(), _buffer.size()),
 		[this, self](boost::system::error_code ec, std::size_t bytes_transferred) {
 			if (!ec)
 			{
@@ -175,7 +180,7 @@ connection::do_write()
 {
 	auto self(shared_from_this());
 
-	boost::asio::async_write(_socket, boost::asio::buffer(_response.to_buffer()),
+	boost::asio::async_write(*_socket, boost::asio::buffer(_response.to_buffer()),
 		[this, self](boost::system::error_code ec, std::size_t) {
 			if ( !ec )
 			{
@@ -191,8 +196,7 @@ connection::do_write()
 					_write_timer.cancel();
 
 					boost::system::error_code ignored_ec;
-					_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
-						ignored_ec);
+					_socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
 					_connection_manager.stop(shared_from_this());
 				}
 			}
