@@ -44,7 +44,7 @@ int main(int argc, char const* argv[])
 	std::cout << "Try this example with:" << std::endl;
 	std::cout << " curl \"http://localhost:8123/query?test=example&other=param\"" << std::endl;
 
-	served::net::server server("0.0.0.0", "8123", mux);
+	served::net::server server("0.0.0.0", "8123", mux, "", "");
 	server.run(10);
 
 	return (EXIT_SUCCESS);

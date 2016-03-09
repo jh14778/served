@@ -55,7 +55,7 @@ int main(int argc, char const* argv[])
 			// delete customer req.params["id"]
 		});
 
-	served::net::server server("127.0.0.1", "8123", mux);
+	served::net::server server("127.0.0.1", "8123", mux, "", "");
 	server.run(10);
 
 	return (EXIT_SUCCESS);

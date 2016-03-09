@@ -51,7 +51,7 @@ int main(int argc, char const* argv[])
 
 	std::cout << "Try this example by opening http://localhost:8123/picture in a browser" << std::endl;
 
-	served::net::server server("0.0.0.0", "8123", mux);
+	served::net::server server("0.0.0.0", "8123", mux, "", "");
 	server.run(10);
 
 	return (EXIT_SUCCESS);

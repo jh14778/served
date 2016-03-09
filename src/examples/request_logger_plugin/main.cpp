@@ -59,7 +59,7 @@ int main(int argc, char const* argv[])
 	std::cout << " curl http://localhost:1337/served" << std::endl;
 	std::cout << " curl http://localhost:1337/itson" << std::endl;
 
-	served::net::server server("127.0.0.1", "1337", mux);
+	served::net::server server("127.0.0.1", "1337", mux, "", "");
 	server.run(10);
 
 	return (EXIT_SUCCESS);

@@ -38,7 +38,7 @@ int main(int argc, char const* argv[])
 	std::cout << "Try this example with:" << std::endl;
 	std::cout << " curl http://localhost:8123/hello" << std::endl;
 
-	served::net::server server("127.0.0.1", "8123", mux);
+	served::net::server server("127.0.0.1", "8123", mux, "", "");
 	server.run(10); // Run with a pool of 10 threads.
 
 	return 0;
