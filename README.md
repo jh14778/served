@@ -12,7 +12,7 @@ Served is a C++ library for building high performance RESTful web servers.
 Served builds upon [Boost.ASIO](http://www.boost.org/) to provide a simple API for developers to create HTTP services in C++.
 
 Features:
-* [x] HTTP 1.1 compatible request parser
+* [x] HTTPS 1.1 compatible request parser
 * [x] Middleware / plug-ins
 * [x] Flexible handler API
 * [x] Cross-platform compatible
@@ -23,6 +23,7 @@ Features:
 
 * [Required] - [Boost 1.56](http://www.boost.org/)
 * [Required] - [RE2](http://code.google.com/p/re2/)
+* [Required] - libssl, libcrypto
 * [Optional] - [Ragel](http://www.complang.org/ragel/)
 
 ### Building
@@ -50,7 +51,7 @@ int main(int argc, char const* argv[]) {
 		});
 
 	// Create the server and run with 10 handler threads.
-	served::net::server server("127.0.0.1", "8080", mux);
+	served::net::server server("127.0.0.1", "8080", mux, "chain_filename.crt", "private_key_filename.key");
 	server.run(10);
 
 	return (EXIT_SUCCESS);
@@ -59,7 +60,7 @@ int main(int argc, char const* argv[]) {
 
 To test the above example, you could run the following command from a terminal:
 ```bash
-$ curl http://localhost:8080/hello -ivh
+$ curl -k https://localhost:8080/hello -ivh
 ```
 
 You can also use named path variables for REST parameters:
@@ -72,7 +73,7 @@ mux.handle("/users/{id}")
 
 To test the above example, you could run the following command from a terminal:
 ```bash
-$ curl http://localhost:8080/users/dave -ivh
+$ curl -k https://localhost:8080/users/dave -ivh
 ```
 
 If you need to be more specific, you can specify a pattern to use to validate
@@ -86,7 +87,7 @@ mux.handle("/users/{id:\\d+}")
 
 To test the above example, you could run the following command from a terminal:
 ```bash
-$ curl http://localhost:8080/users/1 -ivh
+$ curl -k https://localhost:8080/users/1 -ivh
 ```
 
 Method handlers can have arbitrary complexity:
